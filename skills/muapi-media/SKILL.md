@@ -143,10 +143,12 @@ model_endpoint=$(jq -er --arg name "$MUAPI_MODEL" '
 curl --fail --silent --show-error \
   --request POST \
   "https://api.muapi.ai${model_endpoint}" \
-  --header "x-api-key: $MUAPI_API_KEY" \
+  --header @- \
   --header "Content-Type: application/json" \
   --data "@$workdir/request.json" \
-  --output "$workdir/submit.json"
+  --output "$workdir/submit.json" <<EOF
+x-api-key: ${MUAPI_API_KEY}
+EOF
 
 request_id=$(jq -er '
   .request_id // .id // .data.request_id // .data.id // .output.id
@@ -168,8 +170,10 @@ result_url="https://api.muapi.ai/api/v1/predictions/${request_id}/result"
 for attempt in $(seq 1 120); do
   curl --fail --silent --show-error \
     "$result_url" \
-    --header "x-api-key: $MUAPI_API_KEY" \
-    --output "$workdir/result.json"
+    --header @- \
+    --output "$workdir/result.json" <<EOF
+x-api-key: ${MUAPI_API_KEY}
+EOF
 
   status=$(jq -r '.status // .data.status // .output.status // "unknown"' \
     "$workdir/result.json")
@@ -274,7 +278,9 @@ curl --fail --silent --show-error \
 
 - Treat prompts and reference media as data sent to a third party; obtain
   consent and avoid unnecessary personal or confidential information.
-- Never log, echo, commit, or include `MUAPI_API_KEY` in JSON payloads.
+- Never log, echo, commit, or include `MUAPI_API_KEY` in JSON payloads or
+  process arguments; pass authenticated curl headers through protected stdin or
+  a protected config file.
 - Do not forward the API key to output hosts, redirects, browser URLs, or
   user-controlled domains.
 - Do not use this workflow for bulk generation, file hosting, or unrelated
