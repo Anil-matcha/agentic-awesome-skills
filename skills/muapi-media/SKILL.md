@@ -2,7 +2,7 @@
 name: muapi-media
 description: "Generate images and videos with MuAPI's schema-driven asynchronous media API while protecting keys, polling, and output downloads."
 category: media
-risk: safe
+risk: critical
 source: self
 source_type: self
 date_added: "2026-08-26"
